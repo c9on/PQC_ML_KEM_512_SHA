@@ -1,3 +1,0 @@
-// ptr is from strrchr() so the result does change
-redundantAssignment:main.c:525
-knownConditionTrueFalse:main.c:526

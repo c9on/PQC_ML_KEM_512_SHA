@@ -1,9 +1,0 @@
-
-{
-    "type" : "normal",
-    "source" : "wreal.v",
-    "iverilog-args" : [ "-gverilog-ams" ],
-    "vlog95" : {
-        "type" : "CE"
-    }
-}

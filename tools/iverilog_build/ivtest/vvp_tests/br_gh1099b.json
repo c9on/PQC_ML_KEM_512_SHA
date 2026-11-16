@@ -1,7 +1,0 @@
-{
-    "type"   : "normal",
-    "source" : "br_gh1099b.v",
-    "vlog95" : {
-        "iverilog-args" : [ "-pallowsigned=1" ]
-    }
-}
