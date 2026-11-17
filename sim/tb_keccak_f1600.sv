@@ -21,12 +21,14 @@ module tb_keccak_f1600;
     start = 0;
     state_in = '0;
     repeat (3) @(posedge clk);
+    @(negedge clk);
     rst_n = 1;
     start = 1;
-    @(posedge clk);
+    @(negedge clk);
     start = 0;
-    repeat (40) @(posedge clk);
-    if (!done) $fatal(1, "keccak_f1600 did not complete");
+    wait (done);
+    if (state_out[63:0] !== 64'hF1258F7940E1DDE7)
+      $fatal(1, "keccak_f1600 zero-state lane 0 mismatch: %h", state_out[63:0]);
     $display("keccak_f1600 done, state_out[63:0] = %h", state_out[63:0]);
     $finish;
   end

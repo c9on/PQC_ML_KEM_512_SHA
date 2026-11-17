@@ -1,8 +1,8 @@
 module poly_core (
-  input  logic signed [11:0] a [0:255],
-  input  logic signed [11:0] b [0:255],
-  output logic signed [11:0] sum [0:255],
-  output logic signed [11:0] diff [0:255]
+  input  logic signed [0:255][11:0] a,
+  input  logic signed [0:255][11:0] b,
+  output logic signed [0:255][11:0] sum,
+  output logic signed [0:255][11:0] diff
 );
 
   localparam int Q = 3329;
@@ -14,10 +14,10 @@ module poly_core (
     reduce_q = y[11:0];
   endfunction
 
-  always_comb begin
-    for (int i = 0; i < 256; i++) begin
-      sum[i] = reduce_q(a[i] + b[i]);
-      diff[i] = reduce_q(a[i] - b[i]);
-    end
+  for (genvar i = 0; i < 256; i++) begin : g_coeff
+    wire signed [12:0] add_raw = $signed(a[i]) + $signed(b[i]);
+    wire signed [12:0] sub_raw = $signed(a[i]) - $signed(b[i]);
+    assign sum[i] = (add_raw >= Q) ? add_raw - Q : ((add_raw < 0) ? add_raw + Q : add_raw);
+    assign diff[i] = (sub_raw < 0) ? sub_raw + Q : sub_raw;
   end
 endmodule

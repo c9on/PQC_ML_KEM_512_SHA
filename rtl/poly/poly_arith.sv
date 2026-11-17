@@ -1,9 +1,9 @@
 module poly_arith (
-  input  logic signed [11:0] a [0:255],
-  input  logic signed [11:0] b [0:255],
-  output logic signed [11:0] sum [0:255],
-  output logic signed [11:0] sub [0:255],
-  output logic signed [11:0] mul [0:255]
+  input  logic signed [0:255][11:0] a,
+  input  logic signed [0:255][11:0] b,
+  output logic signed [0:255][11:0] sum,
+  output logic signed [0:255][11:0] sub,
+  output logic signed [0:255][11:0] mul
 );
 
   localparam int Q = 3329;
@@ -15,11 +15,13 @@ module poly_arith (
     reduce_q = y;
   endfunction
 
-  always_comb begin
-    for (int i = 0; i < 256; i++) begin
-      sum[i] = reduce_q(a[i] + b[i]);
-      sub[i] = reduce_q(a[i] - b[i]);
-      mul[i] = reduce_q(a[i] * b[i]);
-    end
+  for (genvar i = 0; i < 256; i++) begin : g_coeff
+    wire signed [12:0] add_raw = $signed(a[i]) + $signed(b[i]);
+    wire signed [12:0] sub_raw = $signed(a[i]) - $signed(b[i]);
+    wire signed [23:0] mul_raw = $signed(a[i]) * $signed(b[i]);
+    wire signed [23:0] mul_mod = mul_raw % Q;
+    assign sum[i] = (add_raw >= Q) ? add_raw - Q : ((add_raw < 0) ? add_raw + Q : add_raw);
+    assign sub[i] = (sub_raw < 0) ? sub_raw + Q : sub_raw;
+    assign mul[i] = (mul_mod < 0) ? mul_mod + Q : mul_mod;
   end
 endmodule

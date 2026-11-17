@@ -19,10 +19,10 @@ module sha3_256 (
     int rho [0:4][0:4];
 
     rho[0][0] = 0;  rho[1][0] = 1;  rho[2][0] = 62; rho[3][0] = 28; rho[4][0] = 27;
-    rho[0][1] = 36; rho[1][1] = 44; rho[2][1] = 6;  rho[3][1] = 55; rho[4][1] = 25;
-    rho[0][2] = 3;  rho[1][2] = 10; rho[2][2] = 43; rho[3][2] = 41; rho[4][2] = 45;
-    rho[0][3] = 18; rho[1][3] = 2;  rho[2][3] = 61; rho[3][3] = 56; rho[4][3] = 14;
-    rho[0][4] = 1;  rho[1][4] = 62; rho[2][4] = 56; rho[3][4] = 27; rho[4][4] = 36;
+    rho[0][1] = 36; rho[1][1] = 44; rho[2][1] = 6;  rho[3][1] = 55; rho[4][1] = 20;
+    rho[0][2] = 3;  rho[1][2] = 10; rho[2][2] = 43; rho[3][2] = 25; rho[4][2] = 39;
+    rho[0][3] = 41; rho[1][3] = 45; rho[2][3] = 15; rho[3][3] = 21; rho[4][3] = 8;
+    rho[0][4] = 18; rho[1][4] = 2;  rho[2][4] = 61; rho[3][4] = 56; rho[4][4] = 14;
 
     rc[0]  = 64'h0000000000000001; rc[1]  = 64'h0000000000008082; rc[2]  = 64'h800000000000808A;
     rc[3]  = 64'h8000000080008000; rc[4]  = 64'h000000000000808B; rc[5]  = 64'h0000000080000001;
@@ -66,21 +66,22 @@ module sha3_256 (
     keccak_f = out_state;
   endfunction
 
-  function automatic logic [255:0] sha3_256_compute(input logic [7:0] m [0:255], input int m_len);
+  function automatic logic [255:0] sha3_256_compute(input int m_len);
     logic [1599:0] s;
+    logic [255:0] digest_bytes;
     int i;
     logic [1599:0] w;
     s = '0;
     for (i = 0; i < m_len; i++) begin
-      s[(i * 8) +: 8] = m[i];
+      s[(i * 8) +: 8] = msg[i];
     end
     s[(m_len * 8) +: 8] = 8'h06;
-    s[1599] = 1'b1;
-    w = s;
-    for (i = 0; i < 24; i++) begin
-      w = keccak_f(w);
+    s[1087] = 1'b1;
+    w = keccak_f(s);
+    for (i = 0; i < 32; i++) begin
+      digest_bytes[255 - (i * 8) -: 8] = w[i * 8 +: 8];
     end
-    sha3_256_compute = w[255:0];
+    sha3_256_compute = digest_bytes;
   endfunction
 
   always_ff @(posedge clk or negedge rst_n) begin
@@ -88,7 +89,7 @@ module sha3_256 (
       digest <= '0;
       valid  <= 1'b0;
     end else if (start) begin
-      digest <= sha3_256_compute(msg, msg_len);
+      digest <= sha3_256_compute(msg_len);
       valid  <= 1'b1;
     end else begin
       valid <= 1'b0;

@@ -1,8 +1,8 @@
 module tb_poly_core;
-  logic signed [11:0] a [0:255];
-  logic signed [11:0] b [0:255];
-  logic signed [11:0] sum [0:255];
-  logic signed [11:0] diff [0:255];
+  logic signed [0:255][11:0] a;
+  logic signed [0:255][11:0] b;
+  logic signed [0:255][11:0] sum;
+  logic signed [0:255][11:0] diff;
 
   poly_core dut (
     .a(a),
@@ -17,6 +17,8 @@ module tb_poly_core;
       b[i] = 256 - i;
     end
     #1;
+    if (sum[0] !== 12'd256 || diff[0] !== 12'd3073)
+      $fatal(1, "poly_core coefficient 0 mismatch: sum=%0d diff=%0d", sum[0], diff[0]);
     $display("poly_core: pass, sum[0]=%0d diff[0]=%0d", sum[0], diff[0]);
     $finish;
   end

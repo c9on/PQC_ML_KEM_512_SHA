@@ -21,7 +21,8 @@ module ml_kem_512_top (
   logic [1631:0] sk_local;
   logic [767:0] ct_local;
   logic [31:0] msg_local;
-  logic [31:0] ss_local;
+  logic [31:0] enc_ss_local;
+  logic [31:0] dec_ss_local;
   logic key_valid, enc_valid, dec_valid;
   logic [7:0] key_status, enc_status, dec_status;
 
@@ -43,7 +44,7 @@ module ml_kem_512_top (
     .pk(pk_in),
     .msg(msg_in),
     .ct(ct_local),
-    .ss(ss_local),
+    .ss(enc_ss_local),
     .valid(enc_valid),
     .status(enc_status)
   );
@@ -55,7 +56,7 @@ module ml_kem_512_top (
     .ct(ct_in),
     .sk(sk_in),
     .msg(msg_local),
-    .ss(ss_local),
+    .ss(dec_ss_local),
     .valid(dec_valid),
     .status(dec_status)
   );
@@ -69,33 +70,24 @@ module ml_kem_512_top (
       ss_out <= '0;
       valid  <= 1'b0;
       status <= 8'h00;
-    end else if (start) begin
-      case (cmd)
-        2'b00: begin
-          pk_out <= pk_local;
-          sk_out <= sk_local;
-          valid  <= key_valid;
-          status <= 8'h10;
-        end
-        2'b01: begin
-          ct_out <= ct_local;
-          ss_out <= ss_local;
-          valid  <= enc_valid;
-          status <= 8'h20;
-        end
-        2'b10: begin
-          msg_out <= msg_local;
-          ss_out  <= ss_local;
-          valid   <= dec_valid;
-          status  <= 8'h30;
-        end
-        default: begin
-          valid <= 1'b0;
-          status <= 8'h00;
-        end
-      endcase
     end else begin
       valid <= 1'b0;
+      if (key_valid) begin
+        pk_out <= pk_local;
+        sk_out <= sk_local;
+        valid  <= 1'b1;
+        status <= key_status;
+      end else if (enc_valid) begin
+        ct_out <= ct_local;
+        ss_out <= enc_ss_local;
+        valid  <= 1'b1;
+        status <= enc_status;
+      end else if (dec_valid) begin
+        msg_out <= msg_local;
+        ss_out  <= dec_ss_local;
+        valid   <= 1'b1;
+        status  <= dec_status;
+      end
     end
   end
 endmodule

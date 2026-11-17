@@ -28,19 +28,14 @@ module ml_kem_512_keygen (
 
       // Public key is assembled from the seed-derived matrix expansion.
       for (int i = 0; i < 100; i++) begin
-        public_key_words[i] <= seed_reg[i % 32] ^ 8'hA5;
+        public_key_words[i] <= seed[i % 32] ^ 8'hA5;
+        pk[(i*8)+:8] <= seed[i % 32] ^ 8'hA5;
       end
 
       // Secret key stores the seed and a local key schedule placeholder.
       for (int i = 0; i < 204; i++) begin
-        secret_key_words[i] <= seed_reg[i % 32] ^ 8'h5A;
-      end
-
-      for (int i = 0; i < 100; i++) begin
-        pk[(i*8)+:8] <= public_key_words[i];
-      end
-      for (int i = 0; i < 204; i++) begin
-        sk[(i*8)+:8] <= secret_key_words[i];
+        secret_key_words[i] <= seed[i % 32] ^ 8'h5A;
+        sk[(i*8)+:8] <= seed[i % 32] ^ 8'h5A;
       end
 
       valid  <= 1'b1;

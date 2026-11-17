@@ -25,8 +25,8 @@ module ml_kem_512_encaps (
       end
 
       for (int i = 0; i < 96; i++) begin
-        ct_words[i] <= pk_words[i % 100] ^ 8'h5A;
-        ct[(i*8)+:8] <= ct_words[i];
+        ct_words[i] <= pk[(i % 100)*8 +: 8] ^ 8'h5A;
+        ct[(i*8)+:8] <= pk[(i % 100)*8 +: 8] ^ 8'h5A;
       end
 
       ss <= msg ^ 32'hA5A5A5A5;

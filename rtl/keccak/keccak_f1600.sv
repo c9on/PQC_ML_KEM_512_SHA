@@ -7,7 +7,9 @@ module keccak_f1600 (
   output logic        done
 );
 
-  localparam int ROUNDS = 24;
+  // keccak_f() below performs all 24 rounds combinationally.
+  localparam int ROUNDS = 1;
+  localparam int KECCAK_ROUNDS = 24;
 
   function automatic logic [63:0] rot64(input logic [63:0] v, input int r);
     int shift;
@@ -26,10 +28,10 @@ module keccak_f1600 (
     int rho [0:4][0:4];
 
     rho[0][0] = 0;  rho[1][0] = 1;  rho[2][0] = 62; rho[3][0] = 28; rho[4][0] = 27;
-    rho[0][1] = 36; rho[1][1] = 44; rho[2][1] = 6;  rho[3][1] = 55; rho[4][1] = 25;
-    rho[0][2] = 3;  rho[1][2] = 10; rho[2][2] = 43; rho[3][2] = 41; rho[4][2] = 45;
-    rho[0][3] = 18; rho[1][3] = 2;  rho[2][3] = 61; rho[3][3] = 56; rho[4][3] = 14;
-    rho[0][4] = 1;  rho[1][4] = 62; rho[2][4] = 56; rho[3][4] = 27; rho[4][4] = 36;
+    rho[0][1] = 36; rho[1][1] = 44; rho[2][1] = 6;  rho[3][1] = 55; rho[4][1] = 20;
+    rho[0][2] = 3;  rho[1][2] = 10; rho[2][2] = 43; rho[3][2] = 25; rho[4][2] = 39;
+    rho[0][3] = 41; rho[1][3] = 45; rho[2][3] = 15; rho[3][3] = 21; rho[4][3] = 8;
+    rho[0][4] = 18; rho[1][4] = 2;  rho[2][4] = 61; rho[3][4] = 56; rho[4][4] = 14;
 
     rc[0]  = 64'h0000000000000001; rc[1]  = 64'h0000000000008082; rc[2]  = 64'h800000000000808A;
     rc[3]  = 64'h8000000080008000; rc[4]  = 64'h000000000000808B; rc[5]  = 64'h0000000080000001;
@@ -44,7 +46,7 @@ module keccak_f1600 (
       A[i] = s[i * 64 +: 64];
     end
 
-    for (r = 0; r < ROUNDS; r++) begin
+    for (r = 0; r < KECCAK_ROUNDS; r++) begin
       for (x = 0; x < 5; x++) begin
         C[x] = A[x] ^ A[x + 5] ^ A[x + 10] ^ A[x + 15] ^ A[x + 20];
       end

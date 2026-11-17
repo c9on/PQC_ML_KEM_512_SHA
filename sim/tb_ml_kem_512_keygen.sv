@@ -25,12 +25,15 @@ module tb_ml_kem_512_keygen;
     start = 0;
     for (int i = 0; i < 32; i++) seed[i] = i[7:0];
     repeat (3) @(posedge clk);
+    @(negedge clk);
     rst_n = 1;
     start = 1;
-    @(posedge clk);
+    @(negedge clk);
     start = 0;
-    repeat (5) @(posedge clk);
+    wait (valid);
     if (!valid) $fatal(1, "keygen did not validate");
+    if (pk[15:0] !== 16'ha4a5 || sk[15:0] !== 16'h5b5a)
+      $fatal(1, "keygen scaffold output mismatch: pk=%h sk=%h", pk[15:0], sk[15:0]);
     $display("keygen status = %0d pk[0:15]=%h", status, pk[15:0]);
     $finish;
   end

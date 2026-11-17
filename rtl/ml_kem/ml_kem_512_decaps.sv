@@ -27,8 +27,8 @@ module ml_kem_512_decaps (
         sk_words[i] <= sk[(i*8)+:8];
       end
 
-      msg <= {ct_words[0], ct_words[1], ct_words[2], ct_words[3]} ^ 32'hA5A5A5A5;
-      ss  <= {sk_words[0], sk_words[1], sk_words[2], sk_words[3]} ^ 32'h5A5A5A5A;
+      msg <= ct[31:0] ^ 32'hA5A5A5A5;
+      ss  <= sk[31:0] ^ 32'h5A5A5A5A;
       valid <= 1'b1;
       status <= 8'h30;
     end else begin

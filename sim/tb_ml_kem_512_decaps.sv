@@ -28,12 +28,15 @@ module tb_ml_kem_512_decaps;
     ct = '0;
     sk = '0;
     repeat (3) @(posedge clk);
+    @(negedge clk);
     rst_n = 1;
     start = 1;
-    @(posedge clk);
+    @(negedge clk);
     start = 0;
-    repeat (5) @(posedge clk);
+    wait (valid);
     if (!valid) $fatal(1, "decaps did not validate");
+    if (msg !== 32'hA5A5A5A5 || ss !== 32'h5A5A5A5A)
+      $fatal(1, "decaps scaffold output mismatch: msg=%h ss=%h", msg, ss);
     $display("decaps status = %0d msg = %h ss = %h", status, msg, ss);
     $finish;
   end

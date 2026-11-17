@@ -21,7 +21,7 @@ module ml_kem_512_kdf (
       for (int i = 0; i < 64; i++) begin
         key_buf[i] <= input_key[(i * 8) +: 8];
       end
-      shared_secret <= 32'hA5A5A5A5 ^ {key_buf[0], key_buf[1], key_buf[2], key_buf[3]};
+      shared_secret <= 32'hA5A5A5A5 ^ input_key[31:0];
       valid        <= 1'b1;
       status       <= 8'h40;
     end else begin

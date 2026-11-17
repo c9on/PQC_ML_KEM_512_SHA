@@ -26,12 +26,15 @@ module tb_ml_kem_512_kdf;
     input_key = 512'h0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF;
     key_len = 8'd64;
     repeat (3) @(posedge clk);
+    @(negedge clk);
     rst_n = 1;
     start = 1;
-    @(posedge clk);
+    @(negedge clk);
     start = 0;
-    repeat (4) @(posedge clk);
+    wait (valid);
     if (!valid) $fatal(1, "ml_kem_512_kdf did not assert valid");
+    if (shared_secret !== 32'h2C0E684A)
+      $fatal(1, "ml_kem_512_kdf output mismatch: %h", shared_secret);
     $display("ml_kem_512_kdf: status=%0d shared_secret=%h", status, shared_secret);
     $finish;
   end
