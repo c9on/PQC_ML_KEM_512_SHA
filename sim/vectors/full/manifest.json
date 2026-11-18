@@ -1,0 +1,18 @@
+{
+  "source": "usnistgov/ACVP-Server",
+  "revision": "master",
+  "base_url": "https://raw.githubusercontent.com/usnistgov/ACVP-Server/master/gen-val/json-files/",
+  "files": {
+    "ML-KEM-keyGen-FIPS203/prompt.json": "3f9ce34f6c836c77958bad2729e837c3b213f44ac36c3065976e7acca6389523",
+    "ML-KEM-keyGen-FIPS203/expectedResults.json": "a253d0ad91c95ebea5b409673defef0aa49d65d4ed72286399e2e798ddf073a4",
+    "ML-KEM-encapDecap-FIPS203/prompt.json": "998e22dfb12efb14ce9fdff911ca634b13612819a1806f25da69adba7e16db91",
+    "ML-KEM-encapDecap-FIPS203/expectedResults.json": "9089ec6ff2424da9f2782b89b2f831a329a3e28d6e5e24b802b78ff36ac61cdf"
+  },
+  "coverage": {
+    "keygen": 25,
+    "encapsulation": 25,
+    "decapsulation": 10,
+    "decapsulation_key_check": 10,
+    "encapsulation_key_check": 10
+  }
+}
