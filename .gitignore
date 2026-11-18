@@ -1,0 +1,18 @@
+# Python cache and bytecode
+__pycache__/
+*.py[cod]
+
+# Generated simulation reports
+sim/reports/
+
+# Vivado-generated projects and reports
+vivado_build/
+
+# Simulator waveforms and temporary outputs
+*.vcd
+*.fst
+*.vvp
+
+# Editor and temporary files
+*.swp
+*~

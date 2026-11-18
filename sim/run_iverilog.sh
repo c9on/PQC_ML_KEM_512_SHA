@@ -8,10 +8,25 @@ if [ -z "$IVERILOG_BIN" ]; then
   exit 1
 fi
 
+FUNCTIONAL_TESTS=(
+  tb_intt_256.sv
+  tb_keccak_f1600.sv
+  tb_ml_kem_512_random_roundtrip.sv
+  tb_ml_kem_512_randomized.sv
+  tb_ntt_256.sv
+  tb_poly_arith.sv
+  tb_poly_core.sv
+  tb_sha3_256.sv
+  tb_sha3_512.sv
+  tb_shake128.sv
+  tb_shake256.sv
+)
+
+ACVP_TESTS=(
+  tb_ml_kem_512_acvp_full.sv
+)
+
 RTL_SOURCES=(
-  # Every bench is compiled with the complete RTL source list so missing
-  # module dependencies are caught rather than hidden by a prior simulation.
-  "$ROOT/rtl/common/ml_kem_512_pkg.sv"
   "$ROOT/rtl/common/ml_kem_fips203_pkg.sv"
   "$ROOT/rtl/keccak/keccak_f1600.sv"
   "$ROOT/rtl/sha3/sha3_256.sv"
@@ -23,21 +38,27 @@ RTL_SOURCES=(
   "$ROOT/rtl/poly/poly_arith.sv"
   "$ROOT/rtl/poly/poly_core.sv"
   "$ROOT/rtl/ml_kem/ml_kem_512_engine.sv"
-  "$ROOT/rtl/ml_kem/ml_kem_512_keygen.sv"
-  "$ROOT/rtl/ml_kem/ml_kem_512_encaps.sv"
-  "$ROOT/rtl/ml_kem/ml_kem_512_decaps.sv"
-  "$ROOT/rtl/ml_kem/ml_kem_512_kdf.sv"
   "$ROOT/rtl/ml_kem/ml_kem_512_top.sv"
 )
 
+case "${1:-all}" in
+  functional) tests=("${FUNCTIONAL_TESTS[@]}") ;;
+  acvp)       tests=("${ACVP_TESTS[@]}") ;;
+  all)        tests=("${FUNCTIONAL_TESTS[@]}" "${ACVP_TESTS[@]}") ;;
+  *)
+    echo "Usage: $0 [functional|acvp|all]" >&2
+    exit 2
+    ;;
+esac
+
 status=0
-# Compile and run each tb_*.sv in a fresh executable. One bad bench therefore
-# does not prevent the remaining benches from being reported.
-for tb in "$ROOT"/sim/tb_*.sv; do
+for test_file in "${tests[@]}"; do
+  tb="$ROOT/sim/tb/$test_file"
   top="$(basename "$tb" .sv)"
   exe="$(mktemp "${TMPDIR:-/tmp}/${top}.XXXXXX")"
   echo "===== $top ====="
-  if "$IVERILOG_BIN" -g2012 -s "$top" -I "$ROOT/rtl" "${RTL_SOURCES[@]}" "$tb" -o "$exe" && vvp "$exe"; then
+  if "$IVERILOG_BIN" -g2012 -s "$top" -I "$ROOT/rtl" \
+      "${RTL_SOURCES[@]}" "$tb" -o "$exe" && vvp "$exe"; then
     echo "RESULT: PASS"
   else
     echo "RESULT: FAIL"

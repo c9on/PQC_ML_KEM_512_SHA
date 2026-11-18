@@ -131,9 +131,47 @@ def decaps(dk, ct):
     bad=shake_256(z+ct).digest(32)
     return good if c2==ct else bad
 
+def randomized_reference_check(rounds=16):
+    # Deterministic byte generation makes this test reproducible across runs.
+    from hashlib import shake_256 as xof
+    assert intt(ntt([0] * 256)) == [0] * 256
+
+    for trial in range(rounds):
+        stream=xof(b'PQC_ML_KEM_RANDOM\0'+trial.to_bytes(4,'little')).digest(32*6)
+        a=[int.from_bytes(stream[2*i:2*i+2],'little')%Q for i in range(256)]
+        b=[int.from_bytes(stream[512+2*i:514+2*i],'little')%Q for i in range(256)]
+        assert intt(ntt(a))==a
+
+        product=basemul(ntt(a),ntt(b))
+        restored=intt(product)
+        direct=[]
+        for k in range(256):
+            total=0
+            for j in range(256):
+                total = (total + (a[j]*b[k-j] if k>=j else -a[j]*b[256+k-j]))%Q
+            direct.append(total)
+        assert restored==direct
+
+        assert bits_unpack(bits_pack(a,12),12)==a
+        values10=[x&1023 for x in a]
+        assert bits_unpack(bits_pack(values10,10),10)==values10
+        values4=[x&15 for x in a]
+        assert bits_unpack(bits_pack(values4,4),4)==values4
+
+        d=stream[:32]
+        z=stream[32:64]
+        ek,dk,_=keygen(d,z)
+        message=stream[64:96]
+        ct,k=encaps(ek,message)
+        assert decaps(dk,ct)==k
+
+    return rounds
+
 if __name__=='__main__':
  import json,urllib.request,sys
  d=bytes.fromhex(sys.argv[1]) if len(sys.argv)>1 else bytes.fromhex('47B893474672BA92E4B12EE44FB32953AF8E8503B5FB471D1614FB8A021A660A')
  z=bytes.fromhex(sys.argv[2]) if len(sys.argv)>2 else bytes.fromhex('1F8CB39E9E30BC458A0DC5408884B1187FB217018DF760FA57317703B844A0A9')
  ek,dk,x=keygen(d,z)
  print('rho',x['rho'].hex());print('ek',ek.hex().upper());print('dk',dk.hex().upper())
+ randomized_reference_check()
+ print('randomized reference checks: 16/16 PASS')
