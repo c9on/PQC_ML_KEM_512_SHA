@@ -9,7 +9,10 @@ if [ -z "$IVERILOG_BIN" ]; then
 fi
 
 RTL_SOURCES=(
+  # Every bench is compiled with the complete RTL source list so missing
+  # module dependencies are caught rather than hidden by a prior simulation.
   "$ROOT/rtl/common/ml_kem_512_pkg.sv"
+  "$ROOT/rtl/common/ml_kem_fips203_pkg.sv"
   "$ROOT/rtl/keccak/keccak_f1600.sv"
   "$ROOT/rtl/sha3/sha3_256.sv"
   "$ROOT/rtl/sha3/sha3_512.sv"
@@ -19,6 +22,7 @@ RTL_SOURCES=(
   "$ROOT/rtl/ntt/intt_256.sv"
   "$ROOT/rtl/poly/poly_arith.sv"
   "$ROOT/rtl/poly/poly_core.sv"
+  "$ROOT/rtl/ml_kem/ml_kem_512_engine.sv"
   "$ROOT/rtl/ml_kem/ml_kem_512_keygen.sv"
   "$ROOT/rtl/ml_kem/ml_kem_512_encaps.sv"
   "$ROOT/rtl/ml_kem/ml_kem_512_decaps.sv"
@@ -27,6 +31,8 @@ RTL_SOURCES=(
 )
 
 status=0
+# Compile and run each tb_*.sv in a fresh executable. One bad bench therefore
+# does not prevent the remaining benches from being reported.
 for tb in "$ROOT"/sim/tb_*.sv; do
   top="$(basename "$tb" .sv)"
   exe="$(mktemp "${TMPDIR:-/tmp}/${top}.XXXXXX")"

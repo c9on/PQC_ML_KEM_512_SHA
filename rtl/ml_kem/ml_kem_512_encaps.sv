@@ -1,39 +1,38 @@
 module ml_kem_512_encaps (
-  input  logic         clk,
-  input  logic         rst_n,
-  input  logic         start,
-  input  logic [799:0] pk,
-  input  logic [31:0]  msg,
-  output logic [767:0] ct,
-  output logic [31:0]  ss,
-  output logic         valid,
-  output logic [7:0]   status
+  input  logic          clk,
+  input  logic          rst_n,
+  input  logic          start,
+  input  logic [6399:0] pk,
+  input  logic [255:0]  msg,
+  output logic [6143:0] ct,
+  output logic [255:0]  ss,
+  output logic          busy,
+  output logic          valid,
+  output logic [7:0]    status
 );
 
-  logic [7:0] pk_words [0:99];
-  logic [7:0] ct_words [0:95];
+  logic [6399:0]  unused_ek;
+  logic [13055:0] unused_dk;
 
-  always_ff @(posedge clk or negedge rst_n) begin
-    if (!rst_n) begin
-      ct    <= '0;
-      ss    <= '0;
-      valid <= 1'b0;
-      status <= 8'h00;
-    end else if (start) begin
-      for (int i = 0; i < 100; i++) begin
-        pk_words[i] <= pk[(i*8)+:8];
-      end
-
-      for (int i = 0; i < 96; i++) begin
-        ct_words[i] <= pk[(i % 100)*8 +: 8] ^ 8'h5A;
-        ct[(i*8)+:8] <= pk[(i % 100)*8 +: 8] ^ 8'h5A;
-      end
-
-      ss <= msg ^ 32'hA5A5A5A5;
-      valid <= 1'b1;
-      status <= 8'h20;
-    end else begin
-      valid <= 1'b0;
-    end
-  end
+  // op=01 derives ciphertext and the shared secret from EK and a 32-byte
+  // message. For ACVP, msg is the deterministic test input.
+  ml_kem_512_engine u_engine (
+    .clk(clk),
+    .rst_n(rst_n),
+    .start(start),
+    .op(2'b01),
+    .d('0),
+    .z('0),
+    .m(msg),
+    .ek(pk),
+    .dk('0),
+    .ct_in('0),
+    .ek_out(unused_ek),
+    .dk_out(unused_dk),
+    .ct_out(ct),
+    .ss_out(ss),
+    .busy(busy),
+    .valid(valid),
+    .status(status)
+  );
 endmodule

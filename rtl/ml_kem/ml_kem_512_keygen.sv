@@ -1,47 +1,38 @@
 module ml_kem_512_keygen (
-  input  logic                     clk,
-  input  logic                     rst_n,
-  input  logic                     start,
-  input  logic [7:0]               seed [0:31],
-  output logic [799:0]             pk,
-  output logic [1631:0]            sk,
-  output logic                     valid,
-  output logic [7:0]               status
+  input  logic           clk,
+  input  logic           rst_n,
+  input  logic           start,
+  input  logic [255:0]   d,
+  input  logic [255:0]   z,
+  output logic [6399:0]  pk,
+  output logic [13055:0] sk,
+  output logic           busy,
+  output logic           valid,
+  output logic [7:0]     status
 );
 
-  typedef logic [7:0] seed_u [0:31];
-  seed_u seed_reg;
-  logic [7:0] public_key_words [0:99];
-  logic [7:0] secret_key_words [0:203];
+  logic [6143:0] unused_ct;
+  logic [255:0]  unused_ss;
 
-  always_ff @(posedge clk or negedge rst_n) begin
-    if (!rst_n) begin
-      pk      <= '0;
-      sk      <= '0;
-      valid   <= 1'b0;
-      status  <= 8'h00;
-      for (int i = 0; i < 32; i++) seed_reg[i] <= 8'h00;
-    end else if (start) begin
-      for (int i = 0; i < 32; i++) begin
-        seed_reg[i] <= seed[i];
-      end
-
-      // Public key is assembled from the seed-derived matrix expansion.
-      for (int i = 0; i < 100; i++) begin
-        public_key_words[i] <= seed[i % 32] ^ 8'hA5;
-        pk[(i*8)+:8] <= seed[i % 32] ^ 8'hA5;
-      end
-
-      // Secret key stores the seed and a local key schedule placeholder.
-      for (int i = 0; i < 204; i++) begin
-        secret_key_words[i] <= seed[i % 32] ^ 8'h5A;
-        sk[(i*8)+:8] <= seed[i % 32] ^ 8'h5A;
-      end
-
-      valid  <= 1'b1;
-      status <= 8'h10;
-    end else begin
-      valid <= 1'b0;
-    end
-  end
+  // This wrapper fixes op=00 (ML-KEM.KeyGen) and exposes only its EK/DK.
+  // Unused outputs remain connected so the shared engine is used consistently.
+  ml_kem_512_engine u_engine (
+    .clk(clk),
+    .rst_n(rst_n),
+    .start(start),
+    .op(2'b00),
+    .d(d),
+    .z(z),
+    .m('0),
+    .ek('0),
+    .dk('0),
+    .ct_in('0),
+    .ek_out(pk),
+    .dk_out(sk),
+    .ct_out(unused_ct),
+    .ss_out(unused_ss),
+    .busy(busy),
+    .valid(valid),
+    .status(status)
+  );
 endmodule

@@ -1,93 +1,47 @@
 module ml_kem_512_top (
-  input  logic         clk,
-  input  logic         rst_n,
-  input  logic         start,
-  input  logic [1:0]   cmd,
-  input  logic [7:0]   seed [0:31],
-  input  logic [799:0] pk_in,
-  input  logic [1631:0] sk_in,
-  input  logic [767:0] ct_in,
-  input  logic [31:0]  msg_in,
-  output logic [799:0] pk_out,
-  output logic [1631:0] sk_out,
-  output logic [767:0] ct_out,
-  output logic [31:0]  msg_out,
-  output logic [31:0]  ss_out,
-  output logic         valid,
-  output logic [7:0]   status
+  input  logic           clk,
+  input  logic           rst_n,
+  input  logic           start,
+  input  logic [1:0]     cmd,
+  input  logic [255:0]   seed_d,
+  input  logic [255:0]   seed_z,
+  input  logic [6399:0]  pk_in,
+  input  logic [13055:0] sk_in,
+  input  logic [6143:0]  ct_in,
+  input  logic [255:0]   msg_in,
+  output logic [6399:0]  pk_out,
+  output logic [13055:0] sk_out,
+  output logic [6143:0]  ct_out,
+  output logic [255:0]   ss_out,
+  output logic           busy,
+  output logic           valid,
+  output logic [7:0]     status
 );
 
-  logic [799:0] pk_local;
-  logic [1631:0] sk_local;
-  logic [767:0] ct_local;
-  logic [31:0] msg_local;
-  logic [31:0] enc_ss_local;
-  logic [31:0] dec_ss_local;
-  logic key_valid, enc_valid, dec_valid;
-  logic [7:0] key_status, enc_status, dec_status;
-
-  ml_kem_512_keygen u_keygen (
+  // Command 00: key generation
+  // Command 01: encapsulation
+  // Command 10: decapsulation
+  // Command 11: rejected
+  // This is the production ML-KEM-512 entry point. It routes commands to the
+  // validated engine rather than to the legacy placeholder arithmetic.
+  // Keys and ciphertext use complete FIPS 203 byte sizes: 800, 1632, and 768.
+  ml_kem_512_engine u_engine (
     .clk(clk),
     .rst_n(rst_n),
-    .start(start && (cmd == 2'b00)),
-    .seed(seed),
-    .pk(pk_local),
-    .sk(sk_local),
-    .valid(key_valid),
-    .status(key_status)
+    .start(start),
+    .op(cmd),
+    .d(seed_d),
+    .z(seed_z),
+    .m(msg_in),
+    .ek(pk_in),
+    .dk(sk_in),
+    .ct_in(ct_in),
+    .ek_out(pk_out),
+    .dk_out(sk_out),
+    .ct_out(ct_out),
+    .ss_out(ss_out),
+    .busy(busy),
+    .valid(valid),
+    .status(status)
   );
-
-  ml_kem_512_encaps u_encaps (
-    .clk(clk),
-    .rst_n(rst_n),
-    .start(start && (cmd == 2'b01)),
-    .pk(pk_in),
-    .msg(msg_in),
-    .ct(ct_local),
-    .ss(enc_ss_local),
-    .valid(enc_valid),
-    .status(enc_status)
-  );
-
-  ml_kem_512_decaps u_decaps (
-    .clk(clk),
-    .rst_n(rst_n),
-    .start(start && (cmd == 2'b10)),
-    .ct(ct_in),
-    .sk(sk_in),
-    .msg(msg_local),
-    .ss(dec_ss_local),
-    .valid(dec_valid),
-    .status(dec_status)
-  );
-
-  always_ff @(posedge clk or negedge rst_n) begin
-    if (!rst_n) begin
-      pk_out <= '0;
-      sk_out <= '0;
-      ct_out <= '0;
-      msg_out <= '0;
-      ss_out <= '0;
-      valid  <= 1'b0;
-      status <= 8'h00;
-    end else begin
-      valid <= 1'b0;
-      if (key_valid) begin
-        pk_out <= pk_local;
-        sk_out <= sk_local;
-        valid  <= 1'b1;
-        status <= key_status;
-      end else if (enc_valid) begin
-        ct_out <= ct_local;
-        ss_out <= enc_ss_local;
-        valid  <= 1'b1;
-        status <= enc_status;
-      end else if (dec_valid) begin
-        msg_out <= msg_local;
-        ss_out  <= dec_ss_local;
-        valid   <= 1'b1;
-        status  <= dec_status;
-      end
-    end
-  end
 endmodule
